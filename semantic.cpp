@@ -10,15 +10,22 @@ SemanticAnalyzer::SemanticAnalyzer()
 {
     // Boostrap with some basic types and values
     Type* Int = new typ::Constant("Int");
-    Type* Bool = new typ::Constant("Bool");
-
     _env.insert("zero", Int);
     _env.insert("one", Int);
+
+    Type* Bool = new typ::Constant("Bool");
     _env.insert("true", Bool);
     _env.insert("false", Bool);
 
-    Type* addType = new typ::Arrow({Int, Int}, Int);
-    _env.insert("add", addType);
+    _env.insert("nonzero", new typ::Arrow({Int}, Bool));
+    _env.insert("succ", new typ::Arrow({Int}, Int));
+    _env.insert("add", new typ::Arrow({Int, Int}, Int));
+
+    Type* T = instantiate(typ::Var::makeUnbound(_level), _level);
+    _env.insert("eq", new typ::Arrow({T, T}, Bool));
+
+    Type* S = instantiate(typ::Var::makeUnbound(_level), _level);
+    _env.insert("id", new typ::Arrow({S}, S));
 }
 
 void SemanticAnalyzer::visit(ast::Var* node)

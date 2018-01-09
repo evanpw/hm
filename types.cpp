@@ -268,7 +268,7 @@ Type* unify(Type* lhs, Type* rhs)
     return nullptr;
 }
 
-std::ostream& operator<<(std::ostream& out, Type* type)
+void print(std::ostream& out, Type* type, std::unordered_map<int, char>& varNames)
 {
     type = type->root();
 
@@ -287,21 +287,21 @@ std::ostream& operator<<(std::ostream& out, Type* type)
         {
             Arrow* arrow = dynamic_cast<Arrow*>(type);
 
-            bool parens1 = (arrow->inputs.size() != 1) || arrow->inputs[0]->root()->tag() == kArrow;
-            if (parens1) out << "(";
+            bool brackets = (arrow->inputs.size() != 1) || arrow->inputs[0]->root()->tag() == kArrow;
+            if (brackets) out << "|";
             for (size_t i = 0; i < arrow->inputs.size(); ++i)
             {
                 if (i != 0) out << ", ";
-                out << arrow->inputs[i];
+                print(out, arrow->inputs[i], varNames);
             }
-            if (parens1) out << ")";
+            if (brackets) out << "|";
 
             out << " -> ";
 
-            bool parens2 = arrow->output->root()->tag() == kArrow;
-            if (parens2) out << "(";
-            out << arrow->output;
-            if (parens2) out << ")";
+            bool parens = arrow->output->root()->tag() == kArrow;
+            if (parens) out << "(";
+            print(out, arrow->output, varNames);
+            if (parens) out << ")";
 
             break;
         }
@@ -311,7 +311,14 @@ std::ostream& operator<<(std::ostream& out, Type* type)
             Var* var = dynamic_cast<Var*>(type);
             assert(!var->link);
 
-            out << char('a' + var->index);
+            // Refer to type variables by sequential lowercase characters as encountered
+            auto i = varNames.find(var->index);
+            if (i == varNames.end())
+            {
+                i = varNames.emplace(var->index, char('a' + varNames.size())).first;
+            }
+
+            out << i->second;
 
             break;
         }
@@ -319,7 +326,12 @@ std::ostream& operator<<(std::ostream& out, Type* type)
         default:
             assert(false);
     }
+}
 
+std::ostream& operator<<(std::ostream& out, Type* type)
+{
+    std::unordered_map<int, char> varNames;
+    print(out, type, varNames);
     return out;
 }
 
