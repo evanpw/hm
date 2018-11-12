@@ -7,7 +7,7 @@ class SemanticAnalyzer : public ast::Visitor
 public:
     SemanticAnalyzer();
 
-    typ::Type* infer(ast::Expression* node)
+    typ::Type* infer(ast::Expr* node)
     {
         node->accept(this);
         return _type;

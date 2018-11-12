@@ -6,10 +6,10 @@
 std::string inferType(const std::string& program)
 {
     Parser parser(program);
-    ast::Expression* expr = parser.parse();
+    ast::Context ast = parser.parse();
 
     SemanticAnalyzer semant;
-    typ::Type* type = semant.infer(expr);
+    typ::Type* type = semant.infer(ast.root());
 
     std::stringstream ss;
     ss << type;

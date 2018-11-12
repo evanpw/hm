@@ -2,29 +2,30 @@
 
 using namespace ast;
 
-Expression* Parser::parse()
+Context Parser::parse()
 {
-    return expression();
+    _context.setRoot(expression());
+    return std::move(_context);
 }
 
-Expression* Parser::expression()
+Expr* Parser::expression()
 {
     if (_lexer.peek() == Token::Let)
     {
-        return letExpression();
+        return letExpr();
     }
     else if (_lexer.peek() == Token::Fun)
     {
-        return funExpression();
+        return funExpr();
     }
     else
     {
-        Expression* expr = simpleExpression();
+        Expr* expr = simpleExpr();
 
         if (_lexer.accept(Token::Lparen))
         {
             // Function call: f(e1, e2, ...)
-            std::vector<Expression*> arguments;
+            std::vector<Expr*> arguments;
             if (_lexer.peek() != Token::Rparen)
             {
                 arguments = expressionList();
@@ -32,7 +33,7 @@ Expression* Parser::expression()
 
             _lexer.expect(Token::Rparen);
 
-            return new Call(expr, arguments);
+            return Call::create(_context, expr, arguments);
         }
         else
         {
@@ -43,7 +44,7 @@ Expression* Parser::expression()
 }
 
 // let name = value in body
-Let* Parser::letExpression()
+Let* Parser::letExpr()
 {
     _lexer.expect(Token::Let);
 
@@ -51,17 +52,17 @@ Let* Parser::letExpression()
 
     _lexer.expect(Token::Equals);
 
-    Expression* value = expression();
+    Expr* value = expression();
 
     _lexer.expect(Token::In);
 
-    Expression* body = expression();
+    Expr* body = expression();
 
-    return new Let(name, value, body);
+    return Let::create(_context, name, value, body);
 }
 
 // fun x, y, ... -> body
-Fun* Parser::funExpression()
+Fun* Parser::funExpr()
 {
     _lexer.expect(Token::Fun);
 
@@ -77,24 +78,24 @@ Fun* Parser::funExpression()
 
     _lexer.expect(Token::Arrow);
 
-    Expression* body = expression();
+    Expr* body = expression();
 
-    return new Fun(parameters, body);
+    return Fun::create(_context, parameters, body);
 }
 
 // identifier or parenthesized expression
-Expression* Parser::simpleExpression()
+Expr* Parser::simpleExpr()
 {
     if (_lexer.peek() == Token::Ident)
     {
         std::string name = _lexer.expect(Token::Ident).lexeme;
-        return new Var(name);
+        return Var::create(_context, name);
     }
     else // parenthesized expression
     {
         _lexer.expect(Token::Lparen);
 
-        Expression* expr = expression();
+        Expr* expr = expression();
 
         _lexer.expect(Token::Rparen);
 
@@ -103,9 +104,9 @@ Expression* Parser::simpleExpression()
 }
 
 // One or more expression separated by commas
-std::vector<Expression*> Parser::expressionList()
+std::vector<Expr*> Parser::expressionList()
 {
-    std::vector<Expression*> result;
+    std::vector<Expr*> result;
 
     result.push_back(expression());
 

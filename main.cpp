@@ -6,10 +6,10 @@
 int main()
 {
     Parser parser("add(one, one)");
-    ast::Expression* expr = parser.parse();
+    ast::Context ast = parser.parse();
 
     SemanticAnalyzer semant;
-    typ::Type* type = semant.infer(expr);
+    typ::Type* type = semant.infer(ast.root());
     std::cout << type << "\n";
 
     return 0;

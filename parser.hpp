@@ -9,14 +9,15 @@ public:
     : _lexer(program)
     {}
 
-    ast::Expression* parse();
+    ast::Context parse();
 
 private:
-    ast::Expression* expression();
-    ast::Let* letExpression();
-    ast::Fun* funExpression();
-    ast::Expression* simpleExpression();
-    std::vector<ast::Expression*> expressionList();
+    ast::Expr* expression();
+    ast::Let* letExpr();
+    ast::Fun* funExpr();
+    ast::Expr* simpleExpr();
+    std::vector<ast::Expr*> expressionList();
 
+    ast::Context _context;
     Lexer _lexer;
 };
